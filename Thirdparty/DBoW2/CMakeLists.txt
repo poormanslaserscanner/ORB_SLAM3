@@ -1,12 +1,25 @@
-cmake_minimum_required(VERSION 2.8)
-project(DBoW2)
+cmake_minimum_required(VERSION 3.16)
+project(DBoW2 VERSION 1.0)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+include(GNUInstallDirs)
+
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	set(CMAKE_CXX_STANDARD 17)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_C_EXTENSIONS OFF)
+	set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
+
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "_d")
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
+#if(NOT CMAKE_BUILD_TYPE)
+#  set(CMAKE_BUILD_TYPE Release)
+#endif()
+
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
 
 set(HDRS_DBOW2
   DBoW2/BowVector.h
@@ -29,17 +42,74 @@ set(SRCS_DUTILS
   DUtils/Timestamp.cpp)
 
 
-find_package(OpenCV 4 QUIET)
-if(NOT OpenCV_FOUND)
-   find_package(OpenCV 3.0 QUIET)
-   if(NOT OpenCV_FOUND)
-      message(FATAL_ERROR "OpenCV > 3.0 not found.")
-   endif()
+#find_package(OpenCV 4 QUIET)
+#if(NOT OpenCV_FOUND)
+#   find_package(OpenCV 3.0 QUIET)
+#   if(NOT OpenCV_FOUND)
+#      message(FATAL_ERROR "OpenCV > 3.0 not found.")
+#   endif()
+#endif()
+
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+#include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_library(DBoW2 SHARED ${SRCS_DBOW2} ${SRCS_DUTILS} ${HDRS_DBOW2} ${HDRS_DUTILS})
+add_library(DBoW2::DBoW2 ALIAS DBoW2)
+target_include_directories(DBoW2
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+find_package( OpenCV REQUIRED )
+target_link_libraries(DBoW2 PUBLIC ${OpenCV_LIBS})
+
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/DBoW2)
+
+
+install(
+    TARGETS
+      DBoW2
+    EXPORT DBoW2Targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES ${HDRS_DBOW2} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/DBoW2/DBoW2)
+install(FILES ${HDRS_DUTILS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/DBoW2/DUtils)
+if (MSVC)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
 endif()
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+install(EXPORT DBoW2Targets
+    FILE DBoW2Targets.cmake
+    NAMESPACE DBoW2::
+    DESTINATION ${INSTALL_CONFIGDIR}
+)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
-add_library(DBoW2 SHARED ${SRCS_DBOW2} ${SRCS_DUTILS})
-target_link_libraries(DBoW2 ${OpenCV_LIBS})
+#####################
+# ConfigVersion file
+##
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/DBoW2ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/CMake/DBoW2Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/DBoW2Config.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+## Install all the helper files
+install(
+    FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/DBoW2Config.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/DBoW2ConfigVersion.cmake
+    DESTINATION ${INSTALL_CONFIGDIR}
+)
+
 

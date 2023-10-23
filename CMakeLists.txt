@@ -1,38 +1,57 @@
-cmake_minimum_required(VERSION 2.8)
-project(ORB_SLAM3)
+cmake_minimum_required(VERSION 3.16)
+project(ORB_SLAM3 VERSION 1.0)
 
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release)
-ENDIF()
+include(GNUInstallDirs)
+
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_C_EXTENSIONS OFF)
+	set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
+
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "_d")
+endif()
+
+
+#IF(NOT CMAKE_BUILD_TYPE)
+#  SET(CMAKE_BUILD_TYPE Release)
+#ENDIF()
+
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+
+
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+#set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+
 
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-   add_definitions(-DCOMPILEDWITHC11)
-   message(STATUS "Using flag -std=c++11.")
-elseif(COMPILER_SUPPORTS_CXX0X)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-   add_definitions(-DCOMPILEDWITHC0X)
-   message(STATUS "Using flag -std=c++0x.")
-else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+#if(COMPILER_SUPPORTS_CXX11)
+##   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#   add_definitions(-DCOMPILEDWITHC11)
+#   message(STATUS "Using flag -std=c++11.")
+#elseif(COMPILER_SUPPORTS_CXX0X)
+##   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#   add_definitions(-DCOMPILEDWITHC0X)
+#   message(STATUS "Using flag -std=c++0x.")
+#else()
+#   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+#endif()
 
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 4.4)
+find_package(OpenCV 4.2)
    if(NOT OpenCV_FOUND)
-      message(FATAL_ERROR "OpenCV > 4.4 not found.")
+      message(FATAL_ERROR "OpenCV > 4.2 not found.")
    endif()
 
 MESSAGE("OPENCV VERSION:")
@@ -42,16 +61,16 @@ find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(realsense2)
 
-include_directories(
-${PROJECT_SOURCE_DIR}
-${PROJECT_SOURCE_DIR}/include
-${PROJECT_SOURCE_DIR}/include/CameraModels
-${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
-${EIGEN3_INCLUDE_DIR}
-${Pangolin_INCLUDE_DIRS}
-)
+#include_directories(
+#${PROJECT_SOURCE_DIR}
+#${PROJECT_SOURCE_DIR}/include
+#${PROJECT_SOURCE_DIR}/include/CameraModels
+#${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
+#${EIGEN3_INCLUDE_DIR}
+#${Pangolin_INCLUDE_DIRS}
+#)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_library(${PROJECT_NAME} SHARED
 src/System.cc
@@ -113,20 +132,52 @@ include/SerializationUtils.h
 include/Config.h
 include/Settings.h)
 
-add_subdirectory(Thirdparty/g2o)
 
-target_link_libraries(${PROJECT_NAME}
-${OpenCV_LIBS}
-${EIGEN3_LIBS}
-${Pangolin_LIBRARIES}
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
--lboost_serialization
--lcrypto
+
+if(COMPILER_SUPPORTS_CXX11)
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+   target_compile_definitions(${PROJECT_NAME} PUBLIC COMPILEDWITHC11)
+   message(STATUS "Using flag -std=c++11.")
+elseif(COMPILER_SUPPORTS_CXX0X)
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+   target_compile_definitions(${PROJECT_NAME} PUBLIC COMPILEDWITHC0X)
+   message(STATUS "Using flag -std=c++0x.")
+else()
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
+add_library(ORB_SLAM3::ORB_SLAM3 ALIAS ORB_SLAM3)
+target_include_directories(ORB_SLAM3
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+target_include_directories(ORB_SLAM3
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/CameraModels>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CameraModels>
+)
+
+find_package(Pangolin REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Pangolin_LIBRARIES})
+
+find_package(DBoW2 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC DBoW2::DBoW2)
+
+find_package(g2o REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC g2o::g2o)
+
+find_package(Sophus REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC Sophus::Sophus)
+
+find_package(Boost REQUIRED COMPONENTS serialization)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+
+MESSAGE("Boost_LIBRARIES: " ${Boost_LIBRARIES})
 
 # If RealSense SDK is found the library is added and its examples compiled
 if(realsense2_FOUND)
+    message(FATAL_ERROR "realsense2 found.")
     include_directories(${PROJECT_NAME}
     ${realsense_INCLUDE_DIR}
     )
@@ -139,7 +190,7 @@ endif()
 # Build examples
 
 # RGB-D examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
 add_executable(rgbd_tum
         Examples/RGB-D/rgbd_tum.cc)
@@ -153,7 +204,7 @@ endif()
 
 
 # RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D-Inertial)
 
 if(realsense2_FOUND)
     add_executable(rgbd_inertial_realsense_D435i
@@ -162,7 +213,7 @@ if(realsense2_FOUND)
 endif()
 
 #Stereo examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 
 add_executable(stereo_kitti
         Examples/Stereo/stereo_kitti.cc)
@@ -187,7 +238,7 @@ if(realsense2_FOUND)
 endif()
 
 #Monocular examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
 add_executable(mono_tum
         Examples/Monocular/mono_tum.cc)
@@ -216,7 +267,7 @@ if(realsense2_FOUND)
 endif()
 
 #Monocular inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular-Inertial)
 
 add_executable(mono_inertial_euroc
         Examples/Monocular-Inertial/mono_inertial_euroc.cc)
@@ -237,7 +288,7 @@ if(realsense2_FOUND)
 endif()
 
 #Stereo Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)
 
 add_executable(stereo_inertial_euroc
         Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
@@ -257,7 +308,7 @@ if(realsense2_FOUND)
     target_link_libraries(stereo_inertial_realsense_D435i ${PROJECT_NAME})
 endif()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Calibration)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Calibration)
 if(realsense2_FOUND)
     add_executable(recorder_realsense_D435i
             Examples/Calibration/recorder_realsense_D435i.cc)
@@ -271,7 +322,7 @@ endif()
 #Old examples
 
 # RGB-D examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D)
 
 add_executable(rgbd_tum_old
         Examples_old/RGB-D/rgbd_tum.cc)
@@ -285,7 +336,7 @@ endif()
 
 
 # RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D-Inertial)
 
 if(realsense2_FOUND)
     add_executable(rgbd_inertial_realsense_D435i_old
@@ -294,7 +345,7 @@ if(realsense2_FOUND)
 endif()
 
 #Stereo examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo)
 
 add_executable(stereo_kitti_old
         Examples_old/Stereo/stereo_kitti.cc)
@@ -319,7 +370,7 @@ if(realsense2_FOUND)
 endif()
 
 #Monocular examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular)
 
 add_executable(mono_tum_old
         Examples_old/Monocular/mono_tum.cc)
@@ -348,7 +399,7 @@ if(realsense2_FOUND)
 endif()
 
 #Monocular inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular-Inertial)
 
 add_executable(mono_inertial_euroc_old
         Examples_old/Monocular-Inertial/mono_inertial_euroc.cc)
@@ -369,7 +420,7 @@ if(realsense2_FOUND)
 endif()
 
 #Stereo Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo-Inertial)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo-Inertial)
 
 add_executable(stereo_inertial_euroc_old
         Examples_old/Stereo-Inertial/stereo_inertial_euroc.cc)
@@ -388,3 +439,4 @@ if(realsense2_FOUND)
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
     target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
 endif()
+
