@@ -36,6 +36,7 @@ find_package(Eigen3 3.3.0 REQUIRED)
 
 # Define interface library target
 add_library(sophus INTERFACE)
+add_library(Sophus::Sophus ALIAS sophus)
 
 set(SOPHUS_HEADER_FILES
   sophus/average.hpp

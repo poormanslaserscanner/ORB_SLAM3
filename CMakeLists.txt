@@ -72,6 +72,14 @@ find_package(realsense2)
 
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/DBoW2 DBoW2_Build)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/g2o g2o_Build)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/Sophus Sophus_Build)
+
+
+
 add_library(${PROJECT_NAME} SHARED
 src/System.cc
 src/Tracking.cc
@@ -161,13 +169,13 @@ target_include_directories(ORB_SLAM3
 find_package(Pangolin REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Pangolin_LIBRARIES})
 
-find_package(DBoW2 REQUIRED)
+#find_package(DBoW2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC DBoW2::DBoW2)
 
-find_package(g2o REQUIRED)
+#find_package(g2o REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC g2o::g2o)
 
-find_package(Sophus REQUIRED)
+#find_package(Sophus REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Sophus::Sophus)
 
 find_package(Boost REQUIRED COMPONENTS serialization)
@@ -439,4 +447,58 @@ if(realsense2_FOUND)
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
     target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
 endif()
+
+
+		if (WIN32)
+			set (shext bat)
+			file(COPY ${CMAKE_BINARY_DIR}/../../../run/start.lnk DESTINATION ${CMAKE_BINARY_DIR}/../run)
+		elseif(UNIX)
+			set (shext sh)
+			file(COPY ${CMAKE_BINARY_DIR}/../../../run/start.sh DESTINATION ${CMAKE_BINARY_DIR}/../run)
+		endif()
+		file(COPY ${CMAKE_BINARY_DIR}/../../../run/setvars.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
+		if (WIN32)
+			file(APPEND ${CMAKE_BINARY_DIR}/../run/setvars.${shext} "call setrunenv.${shext}")
+		else()
+			file(APPEND ${CMAKE_BINARY_DIR}/../run/setvars.${shext} ". setrunenv.${shext}\n")
+		endif()
+#		if (OpenCV_INSTALL_PATH)
+#			if (MSVC)
+#				set(OpencvCmakeConfigFile "OpenCVConfig.cmake")
+#			else()
+#				set(OpencvCmakeConfigFile "lib64/cmake/opencv4/OpenCVConfig.cmake")
+#			endif()
+#			include(${OpenCV_INSTALL_PATH}/${OpencvCmakeConfigFile})
+#			if (OpenCV_LIB_PATH)
+#				get_filename_component(lib_tmp "${OpenCV_LIB_PATH}/../bin" ABSOLUTE)
+#				set(DVTK_RUN_PATH ${lib_tmp} ${DVTK_RUN_PATH})
+#			endif()
+#		endif()
+		set (prefix_tmp ${CMAKE_PREFIX_PATH})
+		list(TRANSFORM prefix_tmp APPEND /bin)
+		set(DVTK_RUN_PATH ${prefix_tmp} ${DVTK_RUN_PATH})
+		set (prefix_tmp ${CMAKE_PREFIX_PATH})
+		list(TRANSFORM prefix_tmp APPEND /lib)
+		set(DVTK_RUN_PATH ${prefix_tmp} ${DVTK_RUN_PATH})
+		if (MSVC)
+			set(DVTK_RUN_PATH ${CMAKE_CURRENT_BINARY_DIR}/Debug ${DVTK_RUN_PATH})
+			set(DVTK_RUN_PATH ${CMAKE_CURRENT_BINARY_DIR}/Release ${DVTK_RUN_PATH})
+		else ()
+			set(DVTK_RUN_PATH ${CMAKE_CURRENT_BINARY_DIR} ${DVTK_RUN_PATH})
+		endif()
+		file(TO_NATIVE_PATH "${DVTK_RUN_PATH}" DVTK_RUN_PATH)
+		if (WIN32)
+			configure_file(${CMAKE_CURRENT_LIST_DIR}/setrunenv.${shext}.in ${CMAKE_BINARY_DIR}/../run/setrunenv.${shext})
+		elseif (UNIX)
+			string(REPLACE ";" ":" DVTK_RUN_PATH "${DVTK_RUN_PATH}")
+			message("DVTK_RUN_PATH: '${DVTK_RUN_PATH}'")
+			configure_file(${CMAKE_CURRENT_LIST_DIR}/setrunenv.${shext}.in ${CMAKE_BINARY_DIR}/../run/tmp/setrunenv.${shext} @ONLY)
+			file (COPY ${CMAKE_BINARY_DIR}/../run/tmp/setrunenv.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run
+				FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+		endif()
+		if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+			message("startIDE.${shext} created from project ${PROJECT_NAME}")
+			file(COPY ${CMAKE_CURRENT_LIST_DIR}/startIDE.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
+		endif()
+		file(COPY ${CMAKE_CURRENT_LIST_DIR}/help.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
 

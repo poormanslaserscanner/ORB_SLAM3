@@ -22,8 +22,8 @@
 
 #include<vector>
 
-#include "DBoW2/DBoW2/BowVector.h"
-#include "DBoW2/DBoW2/FeatureVector.h"
+#include "DBoW2/BowVector.h"
+#include "DBoW2/FeatureVector.h"
 
 #include "sophus/geometry.hpp"
 
