@@ -203,11 +203,12 @@ endif()
 add_executable(rgbd_tum
         Examples/RGB-D/rgbd_tum.cc)
 target_link_libraries(rgbd_tum ${PROJECT_NAME})
-
+set(all_the_executales rgbd_tum)
 if(realsense2_FOUND)
     add_executable(rgbd_realsense_D435i
             Examples/RGB-D/rgbd_realsense_D435i.cc)
     target_link_libraries(rgbd_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} rgbd_realsense_D435i)
 endif()
 
 
@@ -218,6 +219,7 @@ if(realsense2_FOUND)
     add_executable(rgbd_inertial_realsense_D435i
             Examples/RGB-D-Inertial/rgbd_inertial_realsense_D435i.cc)
     target_link_libraries(rgbd_inertial_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} rgbd_inertial_realsense_D435i)
 endif()
 
 #Stereo examples
@@ -226,23 +228,31 @@ endif()
 add_executable(stereo_kitti
         Examples/Stereo/stereo_kitti.cc)
 target_link_libraries(stereo_kitti ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_kitti)
+
 
 add_executable(stereo_euroc
         Examples/Stereo/stereo_euroc.cc)
 target_link_libraries(stereo_euroc ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_euroc)
+
 
 add_executable(stereo_tum_vi
         Examples/Stereo/stereo_tum_vi.cc)
 target_link_libraries(stereo_tum_vi ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_tum_vi)
+
 
 if(realsense2_FOUND)
     add_executable(stereo_realsense_t265
             Examples/Stereo/stereo_realsense_t265.cc)
     target_link_libraries(stereo_realsense_t265 ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_realsense_t265)
 
     add_executable(stereo_realsense_D435i
             Examples/Stereo/stereo_realsense_D435i.cc)
     target_link_libraries(stereo_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_realsense_D435i)
 endif()
 
 #Monocular examples
@@ -251,27 +261,33 @@ endif()
 add_executable(mono_tum
         Examples/Monocular/mono_tum.cc)
 target_link_libraries(mono_tum ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_tum)
 
 add_executable(mono_kitti
         Examples/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_kitti)
 
 add_executable(mono_euroc
         Examples/Monocular/mono_euroc.cc)
 target_link_libraries(mono_euroc ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_euroc)
 
 add_executable(mono_tum_vi
         Examples/Monocular/mono_tum_vi.cc)
 target_link_libraries(mono_tum_vi ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_tum_vi)
 
 if(realsense2_FOUND)
     add_executable(mono_realsense_t265
             Examples/Monocular/mono_realsense_t265.cc)
     target_link_libraries(mono_realsense_t265 ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_realsense_t265)
 
     add_executable(mono_realsense_D435i
             Examples/Monocular/mono_realsense_D435i.cc)
     target_link_libraries(mono_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_realsense_D435i)
 endif()
 
 #Monocular inertial examples
@@ -280,19 +296,23 @@ endif()
 add_executable(mono_inertial_euroc
         Examples/Monocular-Inertial/mono_inertial_euroc.cc)
 target_link_libraries(mono_inertial_euroc ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_inertial_euroc)
 
 add_executable(mono_inertial_tum_vi
         Examples/Monocular-Inertial/mono_inertial_tum_vi.cc)
 target_link_libraries(mono_inertial_tum_vi ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_inertial_tum_vi)
 
 if(realsense2_FOUND)
     add_executable(mono_inertial_realsense_t265
             Examples/Monocular-Inertial/mono_inertial_realsense_t265.cc)
     target_link_libraries(mono_inertial_realsense_t265 ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_inertial_realsense_t265)
 
     add_executable(mono_inertial_realsense_D435i
             Examples/Monocular-Inertial/mono_inertial_realsense_D435i.cc)
     target_link_libraries(mono_inertial_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_inertial_realsense_D435i)
 endif()
 
 #Stereo Inertial examples
@@ -301,19 +321,23 @@ endif()
 add_executable(stereo_inertial_euroc
         Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
 target_link_libraries(stereo_inertial_euroc ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_inertial_euroc)
 
 add_executable(stereo_inertial_tum_vi
         Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
 target_link_libraries(stereo_inertial_tum_vi ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_inertial_tum_vi)
 
 if(realsense2_FOUND)
     add_executable(stereo_inertial_realsense_t265
             Examples/Stereo-Inertial/stereo_inertial_realsense_t265.cc)
     target_link_libraries(stereo_inertial_realsense_t265 ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_inertial_realsense_t265)
 
     add_executable(stereo_inertial_realsense_D435i
             Examples/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
     target_link_libraries(stereo_inertial_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_inertial_realsense_D435i)
 endif()
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Calibration)
@@ -321,10 +345,12 @@ if(realsense2_FOUND)
     add_executable(recorder_realsense_D435i
             Examples/Calibration/recorder_realsense_D435i.cc)
     target_link_libraries(recorder_realsense_D435i ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} recorder_realsense_D435i)
 
     add_executable(recorder_realsense_T265
             Examples/Calibration/recorder_realsense_T265.cc)
     target_link_libraries(recorder_realsense_T265 ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} recorder_realsense_T265)
 endif()
 
 #Old examples
@@ -335,11 +361,13 @@ endif()
 add_executable(rgbd_tum_old
         Examples_old/RGB-D/rgbd_tum.cc)
 target_link_libraries(rgbd_tum_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} rgbd_tum_old)
 
 if(realsense2_FOUND)
     add_executable(rgbd_realsense_D435i_old
             Examples_old/RGB-D/rgbd_realsense_D435i.cc)
     target_link_libraries(rgbd_realsense_D435i_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} rgbd_realsense_D435i_old)
 endif()
 
 
@@ -350,6 +378,7 @@ if(realsense2_FOUND)
     add_executable(rgbd_inertial_realsense_D435i_old
             Examples_old/RGB-D-Inertial/rgbd_inertial_realsense_D435i.cc)
     target_link_libraries(rgbd_inertial_realsense_D435i_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} rgbd_inertial_realsense_D435i_old)
 endif()
 
 #Stereo examples
@@ -358,23 +387,28 @@ endif()
 add_executable(stereo_kitti_old
         Examples_old/Stereo/stereo_kitti.cc)
 target_link_libraries(stereo_kitti_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_kitti_old)
 
 add_executable(stereo_euroc_old
         Examples_old/Stereo/stereo_euroc.cc)
 target_link_libraries(stereo_euroc_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_euroc_old)
 
 add_executable(stereo_tum_vi_old
         Examples_old/Stereo/stereo_tum_vi.cc)
 target_link_libraries(stereo_tum_vi_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_tum_vi_old)
 
 if(realsense2_FOUND)
     add_executable(stereo_realsense_t265_old
             Examples_old/Stereo/stereo_realsense_t265.cc)
     target_link_libraries(stereo_realsense_t265_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_realsense_t265_old)
 
     add_executable(stereo_realsense_D435i_old
             Examples_old/Stereo/stereo_realsense_D435i.cc)
     target_link_libraries(stereo_realsense_D435i_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_realsense_D435i_old)
 endif()
 
 #Monocular examples
@@ -383,27 +417,33 @@ endif()
 add_executable(mono_tum_old
         Examples_old/Monocular/mono_tum.cc)
 target_link_libraries(mono_tum_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_tum_old)
 
 add_executable(mono_kitti_old
         Examples_old/Monocular/mono_kitti.cc)
 target_link_libraries(mono_kitti_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_kitti_old)
 
 add_executable(mono_euroc_old
         Examples_old/Monocular/mono_euroc.cc)
 target_link_libraries(mono_euroc_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_euroc_old)
 
 add_executable(mono_tum_vi_old
         Examples_old/Monocular/mono_tum_vi.cc)
 target_link_libraries(mono_tum_vi_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_tum_vi_old)
 
 if(realsense2_FOUND)
     add_executable(mono_realsense_t265_old
             Examples_old/Monocular/mono_realsense_t265.cc)
     target_link_libraries(mono_realsense_t265_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_realsense_t265_old)
 
     add_executable(mono_realsense_D435i_old
             Examples_old/Monocular/mono_realsense_D435i.cc)
     target_link_libraries(mono_realsense_D435i_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_realsense_D435i_old)
 endif()
 
 #Monocular inertial examples
@@ -412,19 +452,23 @@ endif()
 add_executable(mono_inertial_euroc_old
         Examples_old/Monocular-Inertial/mono_inertial_euroc.cc)
 target_link_libraries(mono_inertial_euroc_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_inertial_euroc_old)
 
 add_executable(mono_inertial_tum_vi_old
         Examples_old/Monocular-Inertial/mono_inertial_tum_vi.cc)
 target_link_libraries(mono_inertial_tum_vi_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} mono_inertial_tum_vi_old)
 
 if(realsense2_FOUND)
     add_executable(mono_inertial_realsense_t265_old
             Examples_old/Monocular-Inertial/mono_inertial_realsense_t265.cc)
     target_link_libraries(mono_inertial_realsense_t265_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_inertial_realsense_t265_old)
 
     add_executable(mono_inertial_realsense_D435i_old
             Examples_old/Monocular-Inertial/mono_inertial_realsense_D435i.cc)
     target_link_libraries(mono_inertial_realsense_D435i_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} mono_inertial_realsense_D435i_old)
 endif()
 
 #Stereo Inertial examples
@@ -433,19 +477,23 @@ endif()
 add_executable(stereo_inertial_euroc_old
         Examples_old/Stereo-Inertial/stereo_inertial_euroc.cc)
 target_link_libraries(stereo_inertial_euroc_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_inertial_euroc_old)
 
 add_executable(stereo_inertial_tum_vi_old
         Examples_old/Stereo-Inertial/stereo_inertial_tum_vi.cc)
 target_link_libraries(stereo_inertial_tum_vi_old ${PROJECT_NAME})
+set(all_the_executales ${all_the_executales} stereo_inertial_tum_vi_old)
 
 if(realsense2_FOUND)
     add_executable(stereo_inertial_realsense_t265_old
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_t265.cc)
     target_link_libraries(stereo_inertial_realsense_t265_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_inertial_realsense_t265_old)
 
     add_executable(stereo_inertial_realsense_D435i_old
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
     target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
+    set(all_the_executales ${all_the_executales} stereo_inertial_realsense_D435i_old)
 endif()
 
 
@@ -501,4 +549,52 @@ endif()
 			file(COPY ${CMAKE_CURRENT_LIST_DIR}/startIDE.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
 		endif()
 		file(COPY ${CMAKE_CURRENT_LIST_DIR}/help.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
+
+
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ORB_SLAM3)
+
+install(
+    TARGETS
+      ORB_SLAM3 ${all_the_executales}
+    EXPORT ORB_SLAM3Targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ORB_SLAM3 FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+if (MSVC)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+endif()
+
+install(EXPORT ORB_SLAM3Targets
+    FILE ORB_SLAM3Targets.cmake
+    NAMESPACE ORB_SLAM3::
+    DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+
+#####################
+# ConfigVersion file
+##
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/CMake/ORB_SLAM3Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3Config.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+## Install all the helper files
+install(
+    FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3Config.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3ConfigVersion.cmake
+    DESTINATION ${INSTALL_CONFIGDIR}
+)
 
