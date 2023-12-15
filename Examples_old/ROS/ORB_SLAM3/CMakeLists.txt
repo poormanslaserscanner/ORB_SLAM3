@@ -3,6 +3,9 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
 
+message("PROJECT_BINARY_DIR: '${PROJECT_BINARY_DIR}'")
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/..)
+
 IF(NOT ROS_BUILD_TYPE)
   SET(ROS_BUILD_TYPE Release)
 ENDIF()
