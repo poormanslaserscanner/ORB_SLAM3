@@ -163,7 +163,7 @@ target_include_directories(ORB_SLAM3
 target_include_directories(ORB_SLAM3
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/CameraModels>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CameraModels>
+#        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CameraModels>
 )
 
 find_package(Pangolin REQUIRED)
@@ -496,7 +496,11 @@ if(realsense2_FOUND)
     set(all_the_executales ${all_the_executales} stereo_inertial_realsense_D435i_old)
 endif()
 
-
+MESSAGE("CMAKE_PROJECT_NAME: " ${CMAKE_PROJECT_NAME})
+MESSAGE("PROJECT_NAME: " ${PROJECT_NAME})
+get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
+if(NOT not_top)
+#if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 		if (WIN32)
 			set (shext bat)
 			file(COPY ${CMAKE_BINARY_DIR}/../../../run/start.lnk DESTINATION ${CMAKE_BINARY_DIR}/../run)
@@ -549,6 +553,7 @@ endif()
 			file(COPY ${CMAKE_CURRENT_LIST_DIR}/startIDE.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
 		endif()
 		file(COPY ${CMAKE_CURRENT_LIST_DIR}/help.${shext} DESTINATION ${CMAKE_BINARY_DIR}/../run)
+endif()
 
 
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ORB_SLAM3)
