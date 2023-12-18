@@ -10,6 +10,30 @@ MESSAGE("PROJECT_NAME: " ${PROJECT_NAME})
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
+
+
+get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
+if (NOT not_top)
+	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_C_EXTENSIONS OFF)
+	set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
+
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "_d")
+endif()
+
+
+#IF(NOT CMAKE_BUILD_TYPE)
+#  SET(CMAKE_BUILD_TYPE Release)
+#ENDIF()
+
+
+MESSAGE("Cmake Build type: " ${CMAKE_BUILD_TYPE})
+
+
+
 MESSAGE("CMAKE_PROJECT_NAME: " ${CMAKE_PROJECT_NAME})
 MESSAGE("PROJECT_NAME: " ${PROJECT_NAME})
 
@@ -20,10 +44,10 @@ IF(NOT ROS_BUILD_TYPE)
   SET(ROS_BUILD_TYPE Release)
 ENDIF()
 
-MESSAGE("Build type: " ${ROS_BUILD_TYPE})
+MESSAGE("ROS Build type: " ${ROS_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
 
 set(CMAKE_PREFIX_PATH ${SUPERBUILD_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
 MESSAGE("CMAKE_PREFIX_PATH: '${CMAKE_PREFIX_PATH}'")
@@ -33,11 +57,11 @@ include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
    add_definitions(-DCOMPILEDWITHC11)
    message(STATUS "Using flag -std=c++14.")
 elseif(COMPILER_SUPPORTS_CXX0X)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
    add_definitions(-DCOMPILEDWITHC0X)
    message(STATUS "Using flag -std=c++0x.")
 else()
