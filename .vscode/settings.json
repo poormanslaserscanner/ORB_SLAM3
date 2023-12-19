@@ -1,0 +1,5 @@
+{
+    "cmake.buildDirectory": "${workspaceFolder}/../../Build_debug/ORB_SLAM3/Examples_old/ROS/ORB_SLAM3",
+    "cmake.sourceDirectory": "${workspaceFolder}/Examples_old/ROS/ORB_SLAM3",
+    "cmake.generator": "Unix Makefiles"
+}
