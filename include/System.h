@@ -102,7 +102,7 @@ public:
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const int initFr = 0, const string &strSequence = std::string());
+    System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const int initFr = 0, const string &strSequence = std::string(), const bool bOnlyLoadAtlas = false);
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -192,6 +192,11 @@ public:
     void InsertTrackTime(double& time);
 #endif
 
+    std::vector<Map*> GetAllMaps(void) const
+    {
+        return mpAtlas ? mpAtlas->GetAllMaps() : std::vector<Map*>();
+    }
+
 private:
 
     void SaveAtlas(int type);
@@ -223,7 +228,12 @@ private:
     // Loop Closer. It searches loops with every new keyframe. If there is a loop it performs
     // a pose graph optimization and full bundle adjustment (in a new thread) afterwards.
     LoopClosing* mpLoopCloser;
-
+public:
+    LoopClosing *LoopCloser(void)
+    {
+        return mpLoopCloser;
+    }
+private:
     // The viewer draws the map and the current camera pose. It uses Pangolin.
     Viewer* mpViewer;
 

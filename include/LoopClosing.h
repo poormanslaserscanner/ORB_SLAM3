@@ -61,6 +61,8 @@ public:
     // Main function
     void Run();
 
+    void RunSeq();
+
     void InsertKeyFrame(KeyFrame *pKF);
 
     void RequestReset();
