@@ -142,13 +142,13 @@ target_link_libraries(Stereo ORB_SLAM3::ORB_SLAM3
 )
 
 # Node for RGB-D camera
-rosbuild_add_executable(RGBD
-src/ros_rgbd.cc
-)
+#rosbuild_add_executable(RGBD
+#src/ros_rgbd.cc
+#)
 
-target_link_libraries(RGBD ORB_SLAM3::ORB_SLAM3
+#target_link_libraries(RGBD ORB_SLAM3::ORB_SLAM3
 #${LIBS}
-)
+#)
 
 # Node for monocular-inertial camera
 rosbuild_add_executable(Mono_Inertial
