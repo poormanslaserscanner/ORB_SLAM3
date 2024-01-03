@@ -2,3 +2,6 @@
 export PATH=@DVTK_RUN_PATH@${PATH:+:${PATH}}
 export LD_LIBRARY_PATH=@DVTK_RUN_PATH@${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 
+source @CMAKE_BINARY_DIR@/devel/setup.bash
+ln -s -n -f @CMAKE_BINARY_DIR@/bin/ @CMAKE_CURRENT_LIST_DIR@/../../../../../switch
+
