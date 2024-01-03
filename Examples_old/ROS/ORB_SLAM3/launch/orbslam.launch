@@ -1,0 +1,9 @@
+<launch>
+
+  <node name="Mono_Inertial" pkg="ORB_SLAM3" type="Mono_Inertial" output="screen" required="true" args="$(env SLAM_INPUT_DIR)/ORBvoc.txt $(env SLAM_INPUT_DIR)/sztaki_gopro.yaml true"> 
+  </node>
+</launch>
+
+
+
+
