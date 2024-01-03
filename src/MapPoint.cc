@@ -578,8 +578,11 @@ void MapPoint::PreSave(set<KeyFrame*>& spKF,set<MapPoint*>& spMP)
     mBackupObservationsId1.clear();
     mBackupObservationsId2.clear();
     // Save the id and position in each KF who view it
-    for(std::map<KeyFrame*,std::tuple<int,int> >::const_iterator it = mObservations.begin(), end = mObservations.end(); it != end; ++it)
+    std::map<KeyFrame*,std::tuple<int,int> >::const_iterator next_it = mObservations.begin();
+    for(std::map<KeyFrame*,std::tuple<int,int> >::const_iterator it = next_it, end = mObservations.end(); it != end; it = next_it)
     {
+        next_it = it;
+        ++next_it;
         KeyFrame* pKFi = it->first;
         if(spKF.find(pKFi) != spKF.end())
         {

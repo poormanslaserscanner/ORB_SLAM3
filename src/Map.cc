@@ -359,8 +359,13 @@ void Map::SetLastMapChange(int currentChangeId)
 void Map::PreSave(std::set<GeometricCamera*> &spCams)
 {
     int nMPWithoutObs = 0;
-    for(MapPoint* pMPi : mspMapPoints)
+//    for(MapPoint* pMPi : mspMapPoints)
+    set<MapPoint*>::iterator next_it_outer = mspMapPoints.begin();
+    for (set<MapPoint*>::iterator it = next_it_outer, end = mspMapPoints.end(); it != end; it = next_it_outer)
     {
+        next_it_outer = it;
+        ++next_it_outer;
+        MapPoint* pMPi = *it;
         if(!pMPi || pMPi->isBad())
             continue;
 
@@ -369,13 +374,19 @@ void Map::PreSave(std::set<GeometricCamera*> &spCams)
             nMPWithoutObs++;
         }
         map<KeyFrame*, std::tuple<int,int>> mpObs = pMPi->GetObservations();
-        for(map<KeyFrame*, std::tuple<int,int>>::iterator it= mpObs.begin(), end=mpObs.end(); it!=end; ++it)
+        map<KeyFrame*, std::tuple<int,int>>::iterator next_it = mpObs.begin();
+        for(map<KeyFrame*, std::tuple<int,int>>::iterator it = next_it, end=mpObs.end(); it!=end; it = next_it)
         {
+            next_it = it;
+            ++next_it;
             if(it->first->GetMap() != this || it->first->isBad())
             {
                 pMPi->EraseObservation(it->first);
+                if (pMPi->isBad())
+                {
+                    break;
+                }
             }
-
         }
     }
 
