@@ -197,11 +197,11 @@ public:
         return mpAtlas ? mpAtlas->GetAllMaps() : std::vector<Map*>();
     }
 
-private:
 
     void SaveAtlas(int type);
     bool LoadAtlas(int type);
 
+private:
     string CalculateCheckSum(string filename, int type);
 
     // Input sensor

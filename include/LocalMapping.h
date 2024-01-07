@@ -151,7 +151,9 @@ protected:
     std::mutex mMutexReset;
 
     bool CheckFinish();
+public:
     void SetFinish();
+protected:
     bool mbFinishRequested;
     bool mbFinished;
     std::mutex mMutexFinish;

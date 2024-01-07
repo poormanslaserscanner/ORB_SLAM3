@@ -313,6 +313,7 @@ void Atlas::PreSave()
             return elem1->GetId() < elem2->GetId();
         }
     };
+    mvpBackupMaps.clear();
     std::copy(mspMaps.begin(), mspMaps.end(), std::back_inserter(mvpBackupMaps));
     sort(mvpBackupMaps.begin(), mvpBackupMaps.end(), compFunctor());
 
@@ -344,10 +345,12 @@ void Atlas::PostLoad()
     unsigned long int numKF = 0, numMP = 0;
     for(Map* pMi : mvpBackupMaps)
     {
-        mspMaps.insert(pMi);
-        pMi->PostLoad(mpKeyFrameDB, mpORBVocabulary, mpCams);
-        numKF += pMi->GetAllKeyFrames().size();
-        numMP += pMi->GetAllMapPoints().size();
+        if (mspMaps.insert(pMi).second)
+        {
+            pMi->PostLoad(mpKeyFrameDB, mpORBVocabulary, mpCams);
+            numKF += pMi->GetAllKeyFrames().size();
+            numMP += pMi->GetAllMapPoints().size();
+        }
     }
     mvpBackupMaps.clear();
 }

@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 	}
   }
   igl::writePLY("out.ply", verts, Eigen::MatrixX3i(), Eigen::MatrixX2i(), normals, Eigen::MatrixX2i(), Eigen::MatrixXf(), {}, Eigen::MatrixXf(), {}, Eigen::MatrixXf(), {}, {}, igl::FileEncoding::Binary);
+  SLAM.Shutdown();
   return 0;
 }
 
