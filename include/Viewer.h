@@ -64,6 +64,7 @@ public:
     //void SetTrackingPause();
 
     bool both;
+    bool offline_mode;
 private:
 
     bool ParseViewerParamFile(cv::FileStorage &fSettings);

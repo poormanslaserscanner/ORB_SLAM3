@@ -249,6 +249,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //if(false) // TODO
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile,settings_);
+        mpViewer->offline_mode = bOnlyLoadAtlas;
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
         mpLoopCloser->mpViewer = mpViewer;
@@ -256,12 +257,14 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     }
 
     // Fix verbosity
-    Verbose::SetTh(Verbose::VERBOSITY_DEBUG);
+    Verbose::SetTh(Verbose::VERBOSITY_NORMAL);
     Verbose::PrintMess("QUIET", Verbose::VERBOSITY_QUIET);
     Verbose::PrintMess("NORMAL", Verbose::VERBOSITY_NORMAL);
     Verbose::PrintMess("VERBOSE", Verbose::VERBOSITY_VERBOSE);
     Verbose::PrintMess("VERY_VERBOSE", Verbose::VERBOSITY_VERY_VERBOSE);
     Verbose::PrintMess("DEBUG", Verbose::VERBOSITY_DEBUG);
+    cout << "to cout" << endl;
+    cerr << "to cerr" << endl;
 
 }
 

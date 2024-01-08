@@ -132,9 +132,13 @@ bool MapDrawer::ParseViewerParamFile(cv::FileStorage &fSettings)
     return !b_miss_params;
 }
 
-void MapDrawer::DrawMapPoints()
+void MapDrawer::DrawMapPoints(Map *the_map)
 {
     Map* pActiveMap = mpAtlas->GetCurrentMap();
+    if (the_map)
+    {
+        pActiveMap = the_map;
+    }
     if(!pActiveMap)
         return;
 
@@ -175,27 +179,37 @@ void MapDrawer::DrawMapPoints()
     glEnd();
 }
 
-void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const bool bDrawInertialGraph, const bool bDrawOptLba)
+unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const bool bDrawInertialGraph, const bool bDrawOptLba, const Eigen::Vector3d &selected_point, Map *the_map)
 {
     const float &w = mKeyFrameSize;
     const float h = w*0.75;
     const float z = w*0.6;
 
+
+
     Map* pActiveMap = mpAtlas->GetCurrentMap();
+    if (the_map)
+    {
+        pActiveMap = the_map;
+    }
     // DEBUG LBA
     std::set<long unsigned int> sOptKFs = pActiveMap->msOptKFs;
     std::set<long unsigned int> sFixedKFs = pActiveMap->msFixedKFs;
 
     if(!pActiveMap)
-        return;
+        return 0L;
 
     const vector<KeyFrame*> vpKFs = pActiveMap->GetAllKeyFrames();
+    unsigned long selected_frame_id = 0;
+    
 
     if(bDrawKF)
     {
         for(size_t i=0; i<vpKFs.size(); i++)
         {
             KeyFrame* pKF = vpKFs[i];
+            Eigen::Vector3f diff = selected_point.cast<float>() - pKF->GetCameraCenter();
+            bool close_to_sel = (diff.norm() < 0.05); 
             Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
             unsigned int index_color = pKF->mnOriginMapId;
 
@@ -229,7 +243,15 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const b
                 }
                 else
                 {
-                    glColor3f(0.0f,0.0f,1.0f); // Basic color
+                    if (close_to_sel && !selected_frame_id)
+                    {
+                        selected_frame_id = pKF->mnId;
+                        glColor3f(1.0f,0.0f,0.0f); // Basic color
+                    }
+                    else
+                    {
+                        glColor3f(0.0f,0.0f,1.0f); // Basic color
+                    }
                 }
                 glBegin(GL_LINES);
             }
@@ -308,6 +330,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const b
         }
 
         glEnd();
+        return selected_frame_id;
     }
 
     if(bDrawInertialGraph && pActiveMap->isImuInitialized())

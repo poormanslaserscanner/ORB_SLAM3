@@ -189,6 +189,19 @@ void Viewer::Run()
     pangolin::Var<bool> menuStep("menu.Step",false,false);
 
     pangolin::Var<bool> menuShowOptLba("menu.Show LBA opt", false, true);
+    pangolin::Var<int> menuNumOfMaps("menu.Num of maps", 0);
+    pangolin::Var<int> menuShowMap("menu.Show maps", 0, 100);
+    std::unique_ptr<pangolin::Var<bool>> menuSetFrm0;
+    std::unique_ptr<pangolin::Var<bool>> menuSetFrm1;
+    std::unique_ptr<pangolin::Var<unsigned long>> menuFrm0;
+    std::unique_ptr<pangolin::Var<unsigned long>> menuFrm1;
+    if (offline_mode)
+    {
+        menuSetFrm0 = std::make_unique<pangolin::Var<bool>>("menu.Set frm0", false, false);
+        menuFrm0 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm0", 0);
+        menuSetFrm1 = std::make_unique<pangolin::Var<bool>>("menu.Set frm0", false, false);
+        menuFrm1 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm0", 0);
+    }
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState s_cam(
                 pangolin::ProjectionMatrix(1024,768,mViewpointF,mViewpointF,512,389,0.1,1000),
@@ -219,6 +232,7 @@ void Viewer::Run()
     float trackedImageScale = mpTracker->GetImageScale();
 
     cout << "Starting the Viewer" << endl;
+    Eigen::Vector3d selected_point = Eigen::Vector3d::Zero();
     while(1)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -306,16 +320,54 @@ void Viewer::Run()
             menuStep = false;
         }
 
+        Map *the_map = nullptr;
+        if (mpSystem)
+        {
+            const auto maps = mpSystem->GetAllMaps();           
+            menuNumOfMaps = maps.size();
+            if (menuShowMap > menuNumOfMaps)
+            {
+                menuShowMap = menuNumOfMaps;
+            }
+            if (menuShowMap)
+            {
+                the_map = maps[menuShowMap - 1];
+            }
+        }
+
 
         d_cam.Activate(s_cam);
+        
         glClearColor(1.0f,1.0f,1.0f,1.0f);
         mpMapDrawer->DrawCurrentCamera(Twc);
+        unsigned long selected_frame_id = 0;
         if(menuShowKeyFrames || menuShowGraph || menuShowInertialGraph || menuShowOptLba)
-            mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba);
+            selected_frame_id = mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba, selected_point, the_map);
         if(menuShowPoints)
-            mpMapDrawer->DrawMapPoints();
-
+            mpMapDrawer->DrawMapPoints(the_map);
         pangolin::FinishFrame();
+
+        if (offline_mode && mpSystem)
+        {
+            if (pangolin::Pushed(*menuSetFrm0))
+            {
+                *menuFrm0 = selected_frame_id;
+                mpSystem->
+            }
+            if (pangolin::Pushed(*menuSetFrm1))
+            {
+                *menuFrm1 = selected_frame_id;
+            }
+        }
+
+        if (d_cam.handler)
+        {
+            pangolin::Handler3D *hpt = dynamic_cast<pangolin::Handler3D*>(d_cam.handler);
+            if (hpt && hpt->KeyState() == (pangolin::KeyModifierCtrl | pangolin::MouseButtonLeft) )
+            {
+                selected_point = hpt->Selected_P_w();
+            }
+        }
 
         cv::Mat toShow;
         cv::Mat im = mpFrameDrawer->DrawFrame(trackedImageScale);
