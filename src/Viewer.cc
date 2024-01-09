@@ -190,7 +190,8 @@ void Viewer::Run()
 
     pangolin::Var<bool> menuShowOptLba("menu.Show LBA opt", false, true);
     pangolin::Var<int> menuNumOfMaps("menu.Num of maps", 0);
-    pangolin::Var<int> menuShowMap("menu.Show maps", 0, 100);
+    pangolin::Var<int> menuShowMap("menu.Show maps", 0, 0, 10);
+
     std::unique_ptr<pangolin::Var<bool>> menuSetFrm0;
     std::unique_ptr<pangolin::Var<bool>> menuSetFrm1;
     std::unique_ptr<pangolin::Var<unsigned long>> menuFrm0;
@@ -233,6 +234,7 @@ void Viewer::Run()
 
     cout << "Starting the Viewer" << endl;
     Eigen::Vector3d selected_point = Eigen::Vector3d::Zero();
+    int the_shown_map = 0;
     while(1)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -337,29 +339,10 @@ void Viewer::Run()
 
 
         d_cam.Activate(s_cam);
-        
+        s_cam.Apply();
         glClearColor(1.0f,1.0f,1.0f,1.0f);
         mpMapDrawer->DrawCurrentCamera(Twc);
         unsigned long selected_frame_id = 0;
-        if(menuShowKeyFrames || menuShowGraph || menuShowInertialGraph || menuShowOptLba)
-            selected_frame_id = mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba, selected_point, the_map);
-        if(menuShowPoints)
-            mpMapDrawer->DrawMapPoints(the_map);
-        pangolin::FinishFrame();
-
-        if (offline_mode && mpSystem)
-        {
-            if (pangolin::Pushed(*menuSetFrm0))
-            {
-                *menuFrm0 = selected_frame_id;
-                mpSystem->
-            }
-            if (pangolin::Pushed(*menuSetFrm1))
-            {
-                *menuFrm1 = selected_frame_id;
-            }
-        }
-
         if (d_cam.handler)
         {
             pangolin::Handler3D *hpt = dynamic_cast<pangolin::Handler3D*>(d_cam.handler);
@@ -368,6 +351,29 @@ void Viewer::Run()
                 selected_point = hpt->Selected_P_w();
             }
         }
+
+        if(menuShowKeyFrames || menuShowGraph || menuShowInertialGraph || menuShowOptLba)
+        {
+            selected_frame_id = mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba, selected_point, the_map);
+        }
+        if(menuShowPoints)
+            mpMapDrawer->DrawMapPoints(the_map);
+        pangolin::FinishFrame();
+        the_shown_map = menuShowMap;
+
+
+        if (offline_mode && mpSystem)
+        {
+            if (pangolin::Pushed(*menuSetFrm0))
+            {
+                *menuFrm0 = selected_frame_id;
+            }
+            if (pangolin::Pushed(*menuSetFrm1))
+            {
+                *menuFrm1 = selected_frame_id;
+            }
+        }
+
 
         cv::Mat toShow;
         cv::Mat im = mpFrameDrawer->DrawFrame(trackedImageScale);

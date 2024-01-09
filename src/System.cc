@@ -201,7 +201,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
                                      mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO || mSensor==IMU_RGBD, strSequence);
     if (!bOnlyLoadAtlas)
     {
-        mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
+//        mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
     }
     mpLocalMapper->mInitFr = initFr;
     if(settings_)
@@ -221,7 +221,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR, activeLC); // mSensor!=MONOCULAR);
     if (!bOnlyLoadAtlas)
     {
-        mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
+//        mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
     }
     else
     {
@@ -250,7 +250,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile,settings_);
         mpViewer->offline_mode = bOnlyLoadAtlas;
-        mptViewer = new thread(&Viewer::Run, mpViewer);
+//        mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
         mpLoopCloser->mpViewer = mpViewer;
         mpViewer->both = mpFrameDrawer->both;
@@ -258,6 +258,17 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     // Fix verbosity
     Verbose::SetTh(Verbose::VERBOSITY_NORMAL);
+
+    if (!bOnlyLoadAtlas)
+    {
+        mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
+        mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
+    }
+    if (bUseViewer)
+    {
+        mptViewer = new thread(&Viewer::Run, mpViewer);
+    }
+
     Verbose::PrintMess("QUIET", Verbose::VERBOSITY_QUIET);
     Verbose::PrintMess("NORMAL", Verbose::VERBOSITY_NORMAL);
     Verbose::PrintMess("VERBOSE", Verbose::VERBOSITY_VERBOSE);

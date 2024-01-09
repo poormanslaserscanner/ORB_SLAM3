@@ -205,11 +205,21 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
 
     if(bDrawKF)
     {
+        double mindiff = 1.0;
         for(size_t i=0; i<vpKFs.size(); i++)
         {
             KeyFrame* pKF = vpKFs[i];
             Eigen::Vector3f diff = selected_point.cast<float>() - pKF->GetCameraCenter();
-            bool close_to_sel = (diff.norm() < 0.05); 
+            double actdiff = diff.norm();
+            if (actdiff < mindiff)
+            {
+                mindiff = actdiff;
+                selected_frame_id = pKF->mnId;
+            }
+        }
+        for(size_t i=0; i<vpKFs.size(); i++)
+        {
+            KeyFrame* pKF = vpKFs[i];
             Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
             unsigned int index_color = pKF->mnOriginMapId;
 
@@ -243,9 +253,8 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
                 }
                 else
                 {
-                    if (close_to_sel && !selected_frame_id)
+                    if (selected_frame_id == pKF->mnId)
                     {
-                        selected_frame_id = pKF->mnId;
                         glColor3f(1.0f,0.0f,0.0f); // Basic color
                     }
                     else
@@ -330,7 +339,6 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
         }
 
         glEnd();
-        return selected_frame_id;
     }
 
     if(bDrawInertialGraph && pActiveMap->isImuInitialized())
@@ -416,6 +424,7 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
             }
         }
     }
+    return selected_frame_id;
 }
 
 void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
