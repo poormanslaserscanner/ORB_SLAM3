@@ -263,10 +263,10 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     {
         mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
         mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
-    }
-    if (bUseViewer)
-    {
-        mptViewer = new thread(&Viewer::Run, mpViewer);
+        if (bUseViewer)
+        {
+            mptViewer = new thread(&Viewer::Run, mpViewer);
+        }
     }
 
     Verbose::PrintMess("QUIET", Verbose::VERBOSITY_QUIET);

@@ -200,8 +200,8 @@ void Viewer::Run()
     {
         menuSetFrm0 = std::make_unique<pangolin::Var<bool>>("menu.Set frm0", false, false);
         menuFrm0 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm0", 0);
-        menuSetFrm1 = std::make_unique<pangolin::Var<bool>>("menu.Set frm0", false, false);
-        menuFrm1 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm0", 0);
+        menuSetFrm1 = std::make_unique<pangolin::Var<bool>>("menu.Set frm1", false, false);
+        menuFrm1 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm1", 0);
     }
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState s_cam(

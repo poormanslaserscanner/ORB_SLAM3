@@ -233,6 +233,11 @@ public:
     {
         return mpLoopCloser;
     }
+
+    Viewer *GetViewer(void)
+    {
+        return mpViewer;
+    }
 private:
     // The viewer draws the map and the current camera pose. It uses Pangolin.
     Viewer* mpViewer;

@@ -8,8 +8,16 @@ int main(int argc, char **argv)
     cerr << endl << "Usage: osa2ply path_to_vocabulary path_to_settings" << endl;
     return 1;
   }
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,false, 0, std::string(), true);
+  bool useviewer = true;
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,useviewer, 0, std::string(), true);
+  
+  ORB_SLAM3::Viewer *viewer = SLAM.GetViewer();
+  if (viewer)
+  {
+	viewer->Run();
+  }
 
+  return 0;
   ORB_SLAM3::LoopClosing *lcptr = SLAM.LoopCloser();
   if (lcptr)
   {
