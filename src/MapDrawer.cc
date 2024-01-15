@@ -179,7 +179,7 @@ void MapDrawer::DrawMapPoints(Map *the_map)
     glEnd();
 }
 
-unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const bool bDrawInertialGraph, const bool bDrawOptLba, const Eigen::Vector3d &selected_point, Map *the_map)
+KeyFrame* MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph, const bool bDrawInertialGraph, const bool bDrawOptLba, const Eigen::Vector3d &selected_point, Map *the_map)
 {
     const float &w = mKeyFrameSize;
     const float h = w*0.75;
@@ -200,8 +200,8 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
         return 0L;
 
     const vector<KeyFrame*> vpKFs = pActiveMap->GetAllKeyFrames();
-    unsigned long selected_frame_id = 0;
-    
+//    unsigned long selected_frame_id = 0;
+    KeyFrame *selected_frame_ptr = nullptr;
 
     if(bDrawKF)
     {
@@ -214,7 +214,7 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
             if (actdiff < mindiff)
             {
                 mindiff = actdiff;
-                selected_frame_id = pKF->mnId;
+                selected_frame_ptr = pKF;
             }
         }
         for(size_t i=0; i<vpKFs.size(); i++)
@@ -253,7 +253,7 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
                 }
                 else
                 {
-                    if (selected_frame_id == pKF->mnId)
+                    if (selected_frame_ptr == pKF)
                     {
                         glColor3f(1.0f,0.0f,0.0f); // Basic color
                     }
@@ -424,7 +424,7 @@ unsigned long MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph
             }
         }
     }
-    return selected_frame_id;
+    return selected_frame_ptr;
 }
 
 void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)

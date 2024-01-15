@@ -168,7 +168,12 @@ target_include_directories(ORB_SLAM3
 )
 
 find_package(Pangolin REQUIRED)
+find_package(rosbag REQUIRED)
+find_package(cv_bridge REQUIRED)
+
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Pangolin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${rosbag_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${cv_bridge_LIBRARIES})
 
 #find_package(DBoW2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC DBoW2::DBoW2)
@@ -504,6 +509,8 @@ find_package(libigl REQUIRED)
 add_executable(osa2ply sztaki/osa2ply.cpp)
 target_link_libraries(osa2ply ${PROJECT_NAME})
 target_link_libraries(osa2ply igl::igl_core)
+target_link_libraries(osa2ply ${rosbag_LIBRARIES})
+target_link_libraries(osa2ply ${cv_bridge_LIBRARIES})
 set(all_the_executales ${all_the_executales} osa2ply)
 
 

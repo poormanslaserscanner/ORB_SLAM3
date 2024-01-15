@@ -61,7 +61,7 @@ public:
     // Main function
     void Run();
 
-    void RunSeq();
+    void RunSeq(KeyFrame *kf_to_check = nullptr);
 
     void InsertKeyFrame(KeyFrame *pKF);
 
@@ -120,11 +120,11 @@ public:
 
 protected:
 
-    bool CheckNewKeyFrames();
+    bool CheckNewKeyFrames(void);
 
 
     //Methods to implement the new place recognition algorithm
-    bool NewDetectCommonRegions();
+    bool NewDetectCommonRegions(KeyFrame *kf_to_check = nullptr);
     bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3 &gScw, int &nNumProjMatches,
                                         std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
     bool DetectCommonRegionsFromBoW(std::vector<KeyFrame*> &vpBowCand, KeyFrame* &pMatchedKF, KeyFrame* &pLastCurrentKF, g2o::Sim3 &g2oScw,

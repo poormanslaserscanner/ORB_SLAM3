@@ -1,8 +1,49 @@
 #include "System.h"
 #include "igl/writePLY.h"
+#include "rosbag/bag.h"
+#include "rosbag/view.h"
+#include "sensor_msgs/image_encodings.h"
+#include "cv_bridge/cv_bridge.h"
+
 
 int main(int argc, char **argv)
 {
+	// rosbag::Bag bag;
+    // bag.open("small.bag", rosbag::bagmode::Read);
+
+    // std::vector<std::string> topics;
+    // topics.push_back(std::string("/gopro/image_raw/compressed"));
+
+    // rosbag::View view(bag, rosbag::TopicQuery(topics));
+
+	// int siz = view.size();
+	// for(rosbag::MessageInstance const m: view)
+    // {
+		
+	// 	double time = m.getTime().toSec();
+	// 	sensor_msgs::CompressedImage::ConstPtr rosimgptr = m.instantiate<sensor_msgs::CompressedImage>();
+	// 	if (rosimgptr != nullptr)
+	// 	{
+	// 		cv_bridge::CvImagePtr cv_ptr;
+	// 		try
+	// 		{
+	// 			cv_ptr = cv_bridge::toCvCopy(rosimgptr);
+	// 		}
+	// 		catch(cv_bridge::Exception& e)
+	// 		{
+	// 			continue;
+	// 		}
+	// 	    cv::imshow("image", cv_ptr->image);
+	// 		cv::waitKey(20);
+
+	// 	}
+    // }
+
+    // bag.close();
+
+
+
+	// return 0;
   if(argc < 3)
   {
     cerr << endl << "Usage: osa2ply path_to_vocabulary path_to_settings" << endl;
@@ -14,6 +55,31 @@ int main(int argc, char **argv)
   ORB_SLAM3::Viewer *viewer = SLAM.GetViewer();
   if (viewer)
   {
+	ORB_SLAM3::LoopClosing *lcptr = SLAM.LoopCloser();
+	if (lcptr)
+	{
+		std::vector<ORB_SLAM3::Map*> maps = SLAM.GetAllMaps();
+		for (ORB_SLAM3::Map* map : maps)
+		{
+			if (map)
+			{
+				std::vector<ORB_SLAM3::KeyFrame*> points = map->GetAllKeyFrames();
+				for (ORB_SLAM3::KeyFrame* point : points)
+				{
+					if (point)
+					{
+						point->UpdateConnections();
+						point->UpdateBestCovisibles();
+					}
+				}
+			}
+		}
+	}
+
+	if (argc > 3)
+	{
+		viewer->InitBag(argv[3]);
+	}
 	viewer->Run();
   }
 

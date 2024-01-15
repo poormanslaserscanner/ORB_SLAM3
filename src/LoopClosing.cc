@@ -86,7 +86,7 @@ void LoopClosing::SetLocalMapper(LocalMapping *pLocalMapper)
     mpLocalMapper=pLocalMapper;
 }
 
-void LoopClosing::RunSeq()
+void LoopClosing::RunSeq(KeyFrame *kf_to_check)
 {
     mbFinished =false;
 
@@ -106,7 +106,7 @@ void LoopClosing::RunSeq()
             std::chrono::steady_clock::time_point time_StartPR = std::chrono::steady_clock::now();
 #endif
 
-            bool bFindedRegion = NewDetectCommonRegions();
+            bool bFindedRegion = NewDetectCommonRegions(kf_to_check);
 
 #ifdef REGISTER_TIMES
             std::chrono::steady_clock::time_point time_EndPR = std::chrono::steady_clock::now();
@@ -534,7 +534,7 @@ bool LoopClosing::CheckNewKeyFrames()
     return(!mlpLoopKeyFrameQueue.empty());
 }
 
-bool LoopClosing::NewDetectCommonRegions()
+bool LoopClosing::NewDetectCommonRegions(KeyFrame *kf_to_check)
 {
     // To deactivate placerecognition. No loopclosing nor merging will be performed
     if(!mbActiveLC)
@@ -702,6 +702,22 @@ bool LoopClosing::NewDetectCommonRegions()
         std::chrono::steady_clock::time_point time_StartQuery = std::chrono::steady_clock::now();
 #endif
         mpKeyFrameDB->DetectNBestCandidates(mpCurrentKF, vpLoopBowCand, vpMergeBowCand,4);
+        if (kf_to_check)
+        {
+            bool fnd = false;
+            for (auto& act : vpLoopBowCand)
+            {
+                if (act == kf_to_check)
+                {
+                    fnd = true;
+                    break;
+                }
+            }
+            if (!fnd)
+            {
+                vpLoopBowCand.push_back(kf_to_check);
+            }
+        }
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndQuery = std::chrono::steady_clock::now();
 
@@ -977,7 +993,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(std::vector<KeyFrame*> &vpBowCand, 
                     if(mpTracker->mSensor==System::IMU_MONOCULAR && !mpCurrentKF->GetMap()->GetIniertialBA2())
                         bFixedScale=false;
 
-                    int numOptMatches = Optimizer::OptimizeSim3(mpCurrentKF, pKFi, vpMatchedMP, gScm, 10, mbFixScale, mHessian7x7, true);
+                    int numOptMatches = Optimizer::OptimizeSim3(mpCurrentKF, pKFi, vpMatchedMP, gScm, 10, bFixedScale, mHessian7x7, true);
 
                     if(numOptMatches >= nSim3Inliers)
                     {

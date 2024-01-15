@@ -27,6 +27,10 @@
 #include "Settings.h"
 
 #include <mutex>
+#include "rosbag/bag.h"
+#include "rosbag/view.h"
+#include "sensor_msgs/image_encodings.h"
+#include "cv_bridge/cv_bridge.h"
 
 namespace ORB_SLAM3
 {
@@ -40,8 +44,56 @@ class Settings;
 class Viewer
 {
 public:
+    class BagImage;
+/*    {
+    private:
+        rosbag::Bag bag;
+    public:
+        BagImage(const std::string &bagfile)
+        {
+            bag.open(bagfile, rosbag::bagmode::Read);
+        }
+
+        ~BagImage(void)
+        {
+            bag.close();
+        }
+
+        cv::Mat	GetImage(double sec)
+        {
+            rosbag::View view(bag, rosbag::TopicQuery("/gopro/image_raw/compressed"), ros::Time(sec - 1.0/240), ros::Time(sec + 1.0/240));
+            
+            for(rosbag::MessageInstance const m: view)
+            {
+                double time = m.getTime().toSec();
+                sensor_msgs::CompressedImage::ConstPtr rosimgptr = m.instantiate<sensor_msgs::CompressedImage>();
+                if (rosimgptr != nullptr)
+                {
+                    cv_bridge::CvImagePtr cv_ptr;
+                    try
+                    {
+                        cv_ptr = cv_bridge::toCvCopy(rosimgptr);
+                        return cv_ptr->image;
+
+                    }
+                    catch(cv_bridge::Exception& e)
+                    {
+                        continue;
+                    }
+                }
+            }
+            return cv::Mat();
+        }
+
+    };*/
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Tracking *pTracking, const string &strSettingPath, Settings* settings);
+
+    void InitBag(const std::string &bagfile);
+    // {
+    //     bagimgptr = std::make_unique<BagImage>(bagfile);
+    // }
 
     void newParameterLoader(Settings* settings);
 
@@ -94,6 +146,8 @@ private:
     std::mutex mMutexStop;
 
     bool mbStopTrack;
+
+    std::unique_ptr<BagImage> bagimgptr;
 
 };
 

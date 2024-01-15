@@ -25,6 +25,69 @@
 namespace ORB_SLAM3
 {
 
+    class Viewer::BagImage
+    {
+    private:
+        rosbag::Bag bag;
+    public:
+        BagImage(const std::string &bagfile)
+        {
+            bag.open(bagfile, rosbag::bagmode::Read);
+        }
+
+        ~BagImage(void)
+        {
+            bag.close();
+        }
+
+        cv::Mat	GetImage(double sec)
+        {
+            rosbag::View view(bag, rosbag::TopicQuery("/gopro/image_raw/compressed"), ros::Time(sec - 1.0/240), ros::Time(sec + 1.0/240));
+            
+            for(rosbag::MessageInstance const m: view)
+            {
+                double time = m.getTime().toSec();
+                sensor_msgs::CompressedImage::ConstPtr rosimgptr = m.instantiate<sensor_msgs::CompressedImage>();
+                if (rosimgptr != nullptr)
+                {
+                    cv_bridge::CvImagePtr cv_ptr;
+                    try
+                    {
+                        cv_ptr = cv_bridge::toCvCopy(rosimgptr);
+                        return cv_ptr->image;
+
+                    }
+                    catch(cv_bridge::Exception& e)
+                    {
+                        continue;
+                    }
+                }
+            }
+            return cv::Mat();
+        }
+
+        void DisplayImage(const char *label, double sec, double scalefactor)
+        {
+                double timestamp = sec;
+                cv::Mat mat = GetImage(timestamp);
+                if (!mat.empty())
+                {
+                    int xs = mat.cols * scalefactor;
+                    int ys = mat.rows * scalefactor;
+                    cv::resize(mat, mat, cv::Size(xs, ys));
+                    cv::imshow(label, mat);
+                    cv::waitKey(50);
+                }
+
+        }
+
+    };
+
+    void Viewer::InitBag(const std::string &bagfile)
+    {
+        bagimgptr = std::make_unique<BagImage>(bagfile);
+    }
+
 Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Tracking *pTracking, const string &strSettingPath, Settings* settings):
     both(false), mpSystem(pSystem), mpFrameDrawer(pFrameDrawer),mpMapDrawer(pMapDrawer), mpTracker(pTracking),
     mbFinishRequested(false), mbFinished(true), mbStopped(true), mbStopRequested(false)
@@ -159,6 +222,96 @@ bool Viewer::ParseViewerParamFile(cv::FileStorage &fSettings)
     return !b_miss_params;
 }
 
+struct SlamHandler : public pangolin::Handler3D
+{
+    void Keyboard(pangolin::View& v, unsigned char key, int x, int y, bool pressed)
+    {
+        if (!pressed)
+        {
+            if (key == 231)
+            {
+                dwreleased = true;
+            }
+            if (key == 230)
+            {
+                rgreleased = true;
+            }
+            if (key == 229)
+            {
+                upreleased = true;
+            }
+            if (key == 228)
+            {
+                lfreleased = true;
+            }
+        }
+        pangolin::Handler3D::Keyboard(v, key, x, y, pressed);
+    }
+
+    template <class... Args>
+    SlamHandler(Args&&... args) : pangolin::Handler3D(std::forward<Args>(args)...)
+    {
+        SlamReset();
+    }
+
+    void SlamReset(void)
+    {
+        lfreleased = rgreleased =upreleased = dwreleased = false;
+    }
+
+    bool up(void)
+    {
+        return check(upreleased);
+        if (upreleased)
+        {
+            upreleased = false;
+            return true;
+        }
+        return false;
+    }
+
+    bool down(void)
+    {
+        return check(dwreleased);
+        if (dwreleased)
+        {
+            dwreleased = false;
+            return true;
+        }
+        return false;
+    }
+
+    bool left(void)
+    {
+        return check(lfreleased);
+    }
+
+    bool right(void)
+    {
+        return check(rgreleased);
+    }
+
+private:
+    bool check(bool &var)
+    {
+        if (var)
+        {
+            var = false;
+            return true;
+        }
+        return false;
+    }
+
+    bool upreleased;
+    bool dwreleased;
+    bool lfreleased;
+    bool rgreleased;
+
+
+
+
+};
+
 void Viewer::Run()
 {
     mbFinished = false;
@@ -194,14 +347,18 @@ void Viewer::Run()
 
     std::unique_ptr<pangolin::Var<bool>> menuSetFrm0;
     std::unique_ptr<pangolin::Var<bool>> menuSetFrm1;
+    std::unique_ptr<pangolin::Var<bool>> doloopclose;
     std::unique_ptr<pangolin::Var<unsigned long>> menuFrm0;
     std::unique_ptr<pangolin::Var<unsigned long>> menuFrm1;
+    KeyFrame *menukf0 = nullptr;
+    KeyFrame *menukf1 = nullptr;
     if (offline_mode)
     {
         menuSetFrm0 = std::make_unique<pangolin::Var<bool>>("menu.Set frm0", false, false);
         menuFrm0 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm0", 0);
         menuSetFrm1 = std::make_unique<pangolin::Var<bool>>("menu.Set frm1", false, false);
         menuFrm1 = std::make_unique<pangolin::Var<unsigned long>>("menu.frm1", 0);
+        doloopclose = std::make_unique<pangolin::Var<bool>>("menu.try close loop", false, false);
     }
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState s_cam(
@@ -212,7 +369,7 @@ void Viewer::Run()
     // Add named OpenGL viewport to window and provide 3D Handler
     pangolin::View& d_cam = pangolin::CreateDisplay()
             .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-            .SetHandler(new pangolin::Handler3D(s_cam));
+            .SetHandler(new SlamHandler(s_cam));
 
     pangolin::OpenGlMatrix Twc, Twr;
     Twc.SetIdentity();
@@ -342,7 +499,7 @@ void Viewer::Run()
         s_cam.Apply();
         glClearColor(1.0f,1.0f,1.0f,1.0f);
         mpMapDrawer->DrawCurrentCamera(Twc);
-        unsigned long selected_frame_id = 0;
+        KeyFrame* selected_frame_ptr = 0;
         if (d_cam.handler)
         {
             pangolin::Handler3D *hpt = dynamic_cast<pangolin::Handler3D*>(d_cam.handler);
@@ -354,7 +511,7 @@ void Viewer::Run()
 
         if(menuShowKeyFrames || menuShowGraph || menuShowInertialGraph || menuShowOptLba)
         {
-            selected_frame_id = mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba, selected_point, the_map);
+            selected_frame_ptr = mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba, selected_point, the_map);
         }
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints(the_map);
@@ -364,13 +521,106 @@ void Viewer::Run()
 
         if (offline_mode && mpSystem)
         {
+            unsigned long frm_id = selected_frame_ptr ? selected_frame_ptr->mnId : 0UL;
             if (pangolin::Pushed(*menuSetFrm0))
             {
-                *menuFrm0 = selected_frame_id;
+                *menuFrm0 = frm_id;
+                menukf0 = selected_frame_ptr;
             }
             if (pangolin::Pushed(*menuSetFrm1))
             {
-                *menuFrm1 = selected_frame_id;
+                *menuFrm1 = frm_id;
+                menukf1 = selected_frame_ptr;
+
+            }
+            if (bagimgptr)
+            {
+                if (menukf0)
+                {
+                    bagimgptr->DisplayImage("Image0", menukf0->mTimeStamp, mImageViewerScale);
+                    SlamHandler *hpt = dynamic_cast<SlamHandler*>(d_cam.handler);
+                    {
+                        if (hpt && hpt->down() )
+                        {
+                            if (selected_frame_ptr->mPrevKF)
+                            {
+                                menukf0 = menukf0->mPrevKF;
+                                *menuFrm0 = menukf0->mnId;
+                            }
+                        }                
+                        if (hpt && hpt->up() )
+                        {
+                                menukf0 = menukf0->mNextKF;
+                                *menuFrm0 = menukf0->mnId;
+                        }
+                    }                
+
+                    
+                }
+                if (menukf1)
+                {
+                    bagimgptr->DisplayImage("Image1", menukf1->mTimeStamp, mImageViewerScale);
+                    SlamHandler *hpt = dynamic_cast<SlamHandler*>(d_cam.handler);
+                    {
+                        if (hpt && hpt->left())
+                        {
+                            if (selected_frame_ptr->mPrevKF)
+                            {
+                                menukf1 = menukf1->mPrevKF;
+                                *menuFrm1 = menukf1->mnId;
+                            }
+                        }                
+                        if (hpt && hpt->right())
+                        {
+                                menukf1 = menukf1->mNextKF;
+                                *menuFrm1 = menukf1->mnId;
+                        }
+                    }                
+
+                }
+                if (pangolin::Pushed(*doloopclose))
+                {
+
+                    ORB_SLAM3::LoopClosing *lcptr = mpSystem->LoopCloser();
+                    if (lcptr)
+                    {
+                        if (menukf0 && menukf1)
+                        {
+                        lcptr->InsertKeyFrame(menukf0);
+                        lcptr->RunSeq(menukf1);
+                        }
+                    }
+                }
+
+            }
+            if (0 && selected_frame_ptr && bagimgptr)
+            {
+                double timestamp = selected_frame_ptr->mTimeStamp;
+                cv::Mat mat = bagimgptr->GetImage(timestamp);
+                if (!mat.empty())
+                {
+                    int xs = mat.cols * mImageViewerScale;
+                    int ys = mat.rows * mImageViewerScale;
+                    cv::resize(mat, mat, cv::Size(xs, ys));
+                    cv::imshow("ORB-SLAM3: Selected Frame",mat);
+                    cv::waitKey(mT);
+                }
+                SlamHandler *hpt = dynamic_cast<SlamHandler*>(d_cam.handler);
+                
+                if (hpt && hpt->down() )
+                {
+                    if (selected_frame_ptr->mPrevKF)
+                    {
+                        selected_point = selected_frame_ptr->mPrevKF->GetCameraCenter().cast<double>();
+                    }
+                }                
+                if (hpt && hpt->up() )
+                {
+                    if (selected_frame_ptr->mNextKF)
+                    {
+                        selected_point = selected_frame_ptr->mNextKF->GetCameraCenter().cast<double>();
+                    }
+                }                
             }
         }
 
