@@ -33,6 +33,9 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 
+// COVINS
+#include <comm/communicator.hpp> // for NO_LOOP_FINDER
+
 namespace ORB_SLAM3
 {
 
@@ -135,13 +138,48 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
+    #ifdef COVINS_MOD
+    #ifndef NO_LOOP_FINDER
     mpTracker->SetLoopClosing(mpLoopCloser);
+    #endif
+    #else
+    mpTracker->SetLoopClosing(mpLoopCloser);
+    #endif
 
     mpLocalMapper->SetTracker(mpTracker);
+    #ifdef COVINS_MOD
+    #ifndef NO_LOOP_FINDER
     mpLocalMapper->SetLoopCloser(mpLoopCloser);
+    #endif
+    #else
+    mpLocalMapper->SetLoopCloser(mpLoopCloser);
+    #endif
 
     mpLoopCloser->SetTracker(mpTracker);
+    #ifdef COVINS_MOD
+    #ifndef NO_LOOP_FINDER
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
+    #endif
+    #else
+    mpLoopCloser->SetLocalMapper(mpLocalMapper);
+    #endif
+
+    #ifdef COVINS_MOD
+    std::cout << ">>> COVINS: Initialize communicator" << std::endl;
+    comm_.reset(new Communicator(covins_params::sys::server_ip,covins_params::sys::port,mpAtlas));
+    std::cout << ">>> COVINS: Start comm thread" << std::endl;
+    thread_comm_.reset(new std::thread(&Communicator::Run,comm_));
+
+    // Get ID from back-end
+    std::cout << ">>> COVINS: wait for back-end response" << std::endl;
+    while(comm_->GetClientId() < 0){
+        usleep(1000); //wait until ID is received from server
+    }
+    std::cout << ">>> COVINS: client id: " << comm_->GetClientId() << std::endl;
+
+    // Pass to mapping
+    mpLocalMapper->SetComm(comm_);
+    #endif
 
     // Fix verbosity
     Verbose::SetTh(Verbose::VERBOSITY_QUIET);
@@ -374,7 +412,13 @@ void System::ResetActiveMap()
 void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
+    #ifdef COVINS_MOD
+    #ifndef NO_LOOP_FINDER
     mpLoopCloser->RequestFinish();
+    #endif
+    #else
+    mpLoopCloser->RequestFinish();
+    #endif
     if(mpViewer)
     {
         mpViewer->RequestFinish();
@@ -383,10 +427,20 @@ void System::Shutdown()
     }
 
     // Wait until all thread have effectively stopped
+    #ifdef COVINS_MOD
+    #ifndef NO_LOOP_FINDER
     while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
+    #else
+    while(!mpLocalMapper->isFinished())
+    #endif
+    #else
+    while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
+    #endif
     {
         if(!mpLocalMapper->isFinished())
             cout << "mpLocalMapper is not finished" << endl;
+        #ifdef COVINS_MOD
+        #ifndef NO_LOOP_FINDER
         if(!mpLoopCloser->isFinished())
             cout << "mpLoopCloser is not finished" << endl;
         if(mpLoopCloser->isRunningGBA()){
@@ -394,6 +448,16 @@ void System::Shutdown()
             cout << "break anyway..." << endl;
             break;
         }
+        #endif
+        #else
+        if(!mpLoopCloser->isFinished())
+            cout << "mpLoopCloser is not finished" << endl;
+        if(mpLoopCloser->isRunningGBA()){
+            cout << "mpLoopCloser is running GBA" << endl;
+            cout << "break anyway..." << endl;
+            break;
+        }
+        #endif
         usleep(5000);
     }
 

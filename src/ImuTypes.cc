@@ -412,6 +412,13 @@ cv::Mat Preintegrated::GetOriginalDeltaPosition()
     return dP.clone();
 }
 
+#ifdef COVINS_MOD
+std::vector<Preintegrated::integrable> Preintegrated::GetMeasurements() {
+    std::unique_lock<std::mutex> lock(mMutex);
+    return mvMeasurements;
+}
+#endif
+
 Bias Preintegrated::GetOriginalBias()
 {
     std::unique_lock<std::mutex> lock(mMutex);

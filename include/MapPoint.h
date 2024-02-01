@@ -31,6 +31,9 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/map.hpp>
 
+// COVINS
+#include "comm/communicator.hpp"
+
 namespace ORB_SLAM3
 {
 
@@ -96,6 +99,11 @@ public:
 
     Map* GetMap();
     void UpdateMap(Map* pMap);
+
+    #ifdef COVINS_MOD
+    bool sent_once_ = false;
+    virtual auto ConvertToMsg(covins::MsgLandmark &msg, KeyFrame* kf_ref, bool is_update, size_t cliend_id)->void;
+    #endif
 
 public:
     long unsigned int mnId;

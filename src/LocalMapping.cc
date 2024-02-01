@@ -147,12 +147,37 @@ void LocalMapping::Run()
                         }
 
                         bool bLarge = ((mpTracker->GetMatchesInliers()>75)&&mbMonocular)||((mpTracker->GetMatchesInliers()>100)&&!mbMonocular);
+#ifdef COVINS_MOD
+                        vector<KeyFrame*> local_kfs;
+                        Optimizer::LocalInertialBA(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),local_kfs,num_FixedKF_BA,num_OptKF_BA,num_MPs_BA,num_edges_BA, bLarge, !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+                        if(covins_params::comm::send_updates && this->IsCommInitialized()) {
+                            if(local_kfs.size() <= covins_params::comm::update_window_size) kf_out_buffer_.insert(local_kfs.begin(),local_kfs.end());
+                            else kf_out_buffer_.insert(local_kfs.begin(),local_kfs.begin() + covins_params::comm::update_window_size);
+                        }
+#else
                         Optimizer::LocalInertialBA(mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),num_FixedKF_BA,num_OptKF_BA,num_MPs_BA,num_edges_BA, bLarge, !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+#endif
                         b_doneLBA = true;
                     }
                     else
                     {
+#ifdef COVINS_MOD
+                        list<KeyFrame*> local_kfs;
+                        Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpCurrentKeyFrame->GetMap(),num_FixedKF_BA,num_OptKF_BA,num_MPs_BA,num_edges_BA,local_kfs);
+                        if(covins_params::comm::send_updates && this->IsCommInitialized()) {
+                            if(local_kfs.size() <= covins_params::comm::update_window_size) kf_out_buffer_.insert(local_kfs.begin(),local_kfs.end());
+                            else {
+                                int cntx=0;
+                                for(const auto& kfx : local_kfs) {
+                                    kf_out_buffer_.insert(kfx);
+                                    cntx++;
+                                    if(cntx>=covins_params::comm::update_window_size) break;
+                                }
+                            }
+                        };
+#else
                         Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpCurrentKeyFrame->GetMap(),num_FixedKF_BA,num_OptKF_BA,num_MPs_BA,num_edges_BA);
+#endif
                         b_doneLBA = true;
                     }
 
@@ -189,7 +214,9 @@ void LocalMapping::Run()
 
 
                 // Check redundant local Keyframes
+                #ifndef COVINS_MOD
                 KeyFrameCulling();
+                #endif
 
 #ifdef REGISTER_TIMES
                 std::chrono::steady_clock::time_point time_EndKFCulling = std::chrono::steady_clock::now();
@@ -250,9 +277,36 @@ void LocalMapping::Run()
             vdKFCulling_ms.push_back(timeKFCulling_ms);
 #endif
 
-
+            #ifdef COVINS_MOD
+            #ifndef NO_LOOP_FINDER
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
+            #endif
+            #else
+            mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
+            #endif
 
+#ifdef COVINS_MOD
+            //-----------------------------
+            // This section takes care of sending data to the COVINS backend
+            if(!this->IsCommInitialized()) {
+                if(mbInertial) {
+                    if(mpAtlas->isImuInitialized() && mpAtlas->GetAllKeyFrames().size() >= covins_params::comm::start_sending_after_kf) {
+                        this->SetCommInitialized();
+                    }
+                } else {
+                    if(mpAtlas->GetAllKeyFrames().size() >= covins_params::comm::start_sending_after_kf) {
+                        this->SetCommInitialized();
+                    }
+                }
+            } else {
+                while(kf_out_buffer_.size() > covins_params::comm::kf_buffer_withold/* || this->CheckFinish()*/) { // delay sending a bit to achieve more consistency in data association
+                    KeyFrame* kfi = *(kf_out_buffer_.begin());
+                    kf_out_buffer_.erase(kf_out_buffer_.begin());
+                    comm_->PassKfToComm(kfi);
+                }
+            }
+            //-----------------------------
+#endif
 
 #ifdef REGISTER_TIMES
             std::chrono::steady_clock::time_point time_EndLocalMap = std::chrono::steady_clock::now();
@@ -283,6 +337,17 @@ void LocalMapping::Run()
         usleep(3000);
     }
 
+#ifdef COVINS_MOD
+    // empty comm buffer
+    std::cout << ">>> Empty comm buffer" << std::endl;
+    while(!kf_out_buffer_.empty()) {
+        KeyFrame* kfi = *(kf_out_buffer_.begin());
+        kf_out_buffer_.erase(kf_out_buffer_.begin());
+        comm_->PassKfToComm(kfi);
+    }
+    std::cout << ">>> Done." << std::endl;
+#endif
+
     SetFinish();
 }
 
@@ -291,6 +356,10 @@ void LocalMapping::InsertKeyFrame(KeyFrame *pKF)
     unique_lock<mutex> lock(mMutexNewKFs);
     mlNewKeyFrames.push_back(pKF);
     mbAbortBA=true;
+
+#ifdef COVINS_MOD
+    kf_out_buffer_.insert(pKF);
+#endif
 }
 
 
@@ -625,7 +694,8 @@ void LocalMapping::CreateNewMapPoints()
                     continue;
 
                 // Euclidean coordinates
-                x3D = x3D_h.get_minor<3,1>(0,0) / x3D_h(3);
+//                x3D = x3D_h.get_minor<3,1>(0,0) / x3D_h(3);
+                x3D = cv::Matx31f(x3D_h.get_minor<3,1>(0,0)(0) / x3D_h(3), x3D_h.get_minor<3,1>(0,0)(1) / x3D_h(3), x3D_h.get_minor<3,1>(0,0)(2) / x3D_h(3));
                 bEstimated = true;
 
             }
@@ -1211,6 +1281,11 @@ void LocalMapping::ResetIfRequested()
 
             mIdxInit=0;
 
+#ifdef COVINS_MOD
+            std::cout << "COVINS: reset kf_out_buffer_" << std::endl;
+            kf_out_buffer_.clear();
+#endif
+
             cout << "LM: End reseting Local Mapping..." << endl;
         }
 
@@ -1225,6 +1300,11 @@ void LocalMapping::ResetIfRequested()
             mbNotBA2 = true;
             mbNotBA1 = true;
             mbBadImu=false;
+
+#ifdef COVINS_MOD
+            std::cout << "COVINS: reset kf_out_buffer_" << std::endl;
+            kf_out_buffer_.clear();
+#endif
 
             mbResetRequestedActiveMap = false;
             cout << "LM: End reseting Local Mapping..." << endl;

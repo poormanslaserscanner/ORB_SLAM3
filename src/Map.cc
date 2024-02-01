@@ -232,6 +232,11 @@ void Map::clear()
     mvpKeyFrameOrigins.clear();
     mbIMU_BA1 = false;
     mbIMU_BA2 = false;
+
+    #ifdef COVINS_MOD
+    KeyFrame::nNextId = 0;
+    MapPoint::nNextId = 0;
+    #endif
 }
 
 bool Map::IsInUse()

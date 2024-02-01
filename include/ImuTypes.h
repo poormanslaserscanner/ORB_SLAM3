@@ -31,6 +31,9 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 
+// COVINS
+#include <covins/covins_base/typedefs_base.hpp>
+
 namespace ORB_SLAM3
 {
 
@@ -232,6 +235,18 @@ public:
     Bias GetOriginalBias();
     Bias GetUpdatedBias();
 
+    #ifdef COVINS_MOD
+    struct integrable
+    {
+        integrable(const cv::Point3f &a_, const cv::Point3f &w_ , const float &t_):a(a_),w(w_),t(t_){}
+        cv::Point3f a;
+        cv::Point3f w;
+        float t;
+    };
+
+    std::vector<integrable> GetMeasurements();
+    #endif
+
 public:
     float dT;
     cv::Mat C;
@@ -253,6 +268,7 @@ private:
     // This is used to compute the updated values of the preintegration
     cv::Mat db;
 
+    #ifndef COVINS_MOD
     struct integrable
     {
         integrable(const cv::Point3f &a_, const cv::Point3f &w_ , const float &t_):a(a_),w(w_),t(t_){}
@@ -260,6 +276,7 @@ private:
         cv::Point3f w;
         float t;
     };
+    #endif
 
     std::vector<integrable> mvMeasurements;
 
